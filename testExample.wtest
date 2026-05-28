@@ -1,9 +1,94 @@
-import example.pepita
+import vehiculos.*
+import dependecias.*
+describe "test de rodados" {
+  const deportes = new Dependencia(empleados=45)
 
-describe "group of tests for pepita" {
+  const cultura = new Dependencia(empleados=31)
 
-  test "pepita has initial energy" {
-    assert.equals(100, pepita.energy())
+  var cachito = new Corsa(color="rojo")
+
+  const pedido1 = new Pedidos(distancia=960,tiempoMax=8,cantPasajeros=4,coloresIncompatibles=#{"azul","negro"})
+  const pedido2 = new Pedidos(distancia=960,tiempoMax=8,cantPasajeros=4,coloresIncompatibles=#{"azul","rojo"})
+  const pedido3 = new Pedidos(distancia=600,tiempoMax=10,cantPasajeros=2,coloresIncompatibles=#{"beige"})
+  method initialize(){
+    //lista de autos de la dependencia deporte.
+    deportes.agregarAFlota(cachito)  //aca esta cachito
+    deportes.agregarAFlota(new Corsa(color="azul"))
+    deportes.agregarAFlota(new Corsa(color="verde"))
+    deportes.agregarAFlota(new Kwid(tieneTanquesAdicional=true))
+    deportes.agregarAFlota(new AutosEspeciales(capacidad=5, velocidadMax=160, color="beige", peso=1200))
+    //lista de autos de la dependencia cultura.
+    cultura.agregarAFlota(cachito)
+    cultura.agregarAFlota(new Kwid(tieneTanquesAdicional=true))
+    cultura.agregarAFlota(new Kwid(tieneTanquesAdicional=true))
+    cultura.agregarAFlota(new Kwid(tieneTanquesAdicional=false))
+    trafic.cambiarInterior(popular)
+    trafic.cambiarMotor(bataton)
+    cultura.agregarAFlota(trafic)
   }
-
+  test "El peso total de la flota de deportes" {
+    assert.equals(1300*3+1350+1200, deportes.pesoTotalFlota())
+  }
+  test "El peso total de la flota de cultura" {
+    assert.equals(1300+1350+1350+1200+5500, cultura.pesoTotalFlota())
+  }
+  test "En deportes esta bien equipada porque es la flota es mayor 3 y todos superan los 100km" {
+    assert.that(deportes.estaBienEquipada())
+  }
+  test "En cultura no esta bien equipada porque la trafic tiene un motor bataton de 80km" {
+    assert.notThat(cultura.estaBienEquipada())
+  }
+  test "La capacidad total de todos los rodados azules en deportes es 7 por un corsa(4) y un kwid con tanque(3)" {
+    assert.equals(7,deportes.capacidadTotalEnColor("azul"))
+  }
+  test "La capacidad total de todos los rodados azules en cultura es 10 por dos kwid con tanque(6) y otro que no(4)" {
+    assert.equals(10,cultura.capacidadTotalEnColor("azul"))
+  }
+  test "El color del auto mas rapido en deporte es el auto especial en beige llendo 160km" {
+    assert.equals("beige",deportes.colorDelRodadoMasRapido())
+  }
+  test "El color del auto mas rapido en cultura es cachito en rojo llendo 150km" {
+    assert.equals("rojo",cultura.colorDelRodadoMasRapido())
+  }
+  test "Deportes es una dependencia grande, tiene 40 empleados o mas y tiene 5 rodados" {
+    assert.that(deportes.esGrande())
+  }
+  test "Cultura no es una dependencia grande, no tiene 40 empleados o mas y si tiene 5 rodados" {
+    assert.notThat(cultura.esGrande())
+  }
+  test "En deporte la capacidad de los rodado no alcanza por 25, para todos sus empleados" {
+    assert.equals(25, deportes.capacidadFaltante())
+  }
+  test "En cultura la capacidad de los rodado no alcanza por 5, para todos sus empleados" {
+    assert.equals(5, cultura.capacidadFaltante())
+  }
+  test "Puede cachito satisfacer el pedido, si la distancia es de 960kms, duracion de 8hs, para 4 pasajeros y puede ser de color azul y negro" {
+    assert.that(pedido1.puedeSatisfacerElPedido(cachito))
+    //assert.that(pedido1.velocidadRequerida())
+  }
+  test "Puede cachito satisfacer el pedido, no porque su capacidad es de 4 menor a la cant de pasajeros a llevar(6), tiene ahora un color incompatible, y al requerir menos tiempo(6) su velocidad debe ser mayor a 160km" {
+    pedido1.agregarColorIncopatible("rojo")
+    pedido1.cambiarLaCantidadDePasajeros(6)
+    pedido1.cambiarTiempoMaximo(6)
+    assert.notThat(pedido1.puedeSatisfacerElPedido(cachito))
+  }
+  test "Quitar 1hs mas al pedido" {
+    pedido1.acelerar()
+    assert.equals(7, pedido1.tiempoEstimado())
+  }
+  test "Agregar 1hs mas al pedido" {
+    pedido1.relajar()
+    assert.equals(9, pedido1.tiempoEstimado())
+  }
+  test "En cultura hay pedidos no satisfechos" {
+    cultura.agregar(pedido1)
+    cultura.agregar(pedido2)
+    cultura.agregar(pedido3)
+    assert.equals([pedido1,pedido2], cultura.losPedidosQueNoPuedenSerSatisfechos())
+  }
+  test "En deportes todos sus pedido tienen en comun como color imcopatibles el color azul" {
+    deportes.agregar(pedido1)
+    deportes.agregar(pedido2)
+    assert.that(deportes.todosLosPedidoTieneIncompatible("azul"))
+  }
 }
